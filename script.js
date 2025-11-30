@@ -104,3 +104,52 @@ async function processFile() {
     download.innerText = "Download File";
     download.style.display = "block";
 }
+function processFile() {
+
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) return alert("Please upload a file.");
+
+    // Show progress bar
+    document.getElementById("progress-wrapper").style.display = "block";
+    document.getElementById("download-btn").style.display = "none";
+
+    let bar = document.getElementById("progress-bar");
+    bar.style.width = "0%";
+
+    // FAKE ANIMATION while backend processes
+    let progress = 0;
+    let fakeLoading = setInterval(() => {
+        progress += 7;
+        bar.style.width = progress + "%";
+        if (progress >= 90) clearInterval(fakeLoading);
+    }, 200);
+
+    // ----------------- API CALL -----------------
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("https://pdf-tools-backend-1.onrender.com/convert", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.blob())
+    .then(blob => {
+
+        // Finish progress
+        bar.style.width = "100%";
+
+        const url = window.URL.createObjectURL(blob);
+
+        // Show Download button
+        const downloadBtn = document.getElementById("download-btn");
+        downloadBtn.href = url;
+        downloadBtn.download = "output_" + file.name;
+        downloadBtn.innerText = "Download File";
+        downloadBtn.style.display = "block";
+    })
+    .catch(err => {
+        alert("Error: " + err);
+        console.log(err);
+    });
+
+}
