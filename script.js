@@ -103,7 +103,6 @@ function removeFile(index) {
 // Process File — with Progress Loader
 // -----------------------------------------------------
 async function processFile() {
-
     const params = new URLSearchParams(window.location.search);
     const tool = params.get("tool");
 
@@ -112,107 +111,86 @@ async function processFile() {
     // MULTIPLE FILE TOOLS
     if (tool === "merge-pdf" || tool === "jpg-to-pdf") {
         const files = document.getElementById("fileInput").files;
-
         if (!files.length) return alert("Select at least one file");
         if (tool === "merge-pdf" && files.length < 2)
             return alert("Select at least 2 PDFs");
-
         for (let f of files) fd.append("files", f);
-    }
-
-    // SINGLE FILE TOOLS
-    else {
+    } else {
         const file = document.getElementById("fileInput").files[0];
         if (!file) return alert("Select a file");
         fd.append("file", file);
     }
 
-    // SPLIT TOOL
-    if (tool === "split-pdf") {
-        const ranges = document.getElementById("rangeInput").value;
-        if (!ranges) return alert("Enter page ranges");
-        fd.append("ranges", ranges);
-    }
-
-    // ROTATE TOOL
-    if (tool === "rotate-pdf") {
-        const angle = document.getElementById("angleInput").value;
-        fd.append("angle", angle);
-    }
-
-    // PASSWORD TOOLS
-    if (tool === "protect-pdf" || tool === "unlock-pdf") {
-        const pwd = document.getElementById("passwordInput").value;
-        if (!pwd) return alert("Enter password");
-        fd.append("password", pwd);
-    }
+    // OTHER TOOL FIELDS
+    if (tool === "split-pdf") fd.append("ranges", document.getElementById("rangeInput").value);
+    if (tool === "rotate-pdf") fd.append("angle", document.getElementById("angleInput").value);
+    if (tool === "protect-pdf" || tool === "unlock-pdf")
+        fd.append("password", document.getElementById("passwordInput").value);
 
     // PROGRESS BAR UI
     const wrapper = document.getElementById("progress-wrapper");
     const bar = document.getElementById("progress-bar");
-    const percentText = document.getElementById("progress-percent");
+    const percent = document.getElementById("progress-percent");
+    const downloadBtn = document.getElementById("download-btn");
 
     wrapper.style.display = "block";
-    document.getElementById("download-btn").style.display = "none";
     bar.style.width = "0%";
-    percentText.innerText = "0%";
+    percent.innerText = "0%";
+    downloadBtn.style.display = "none";
 
-    let progress = 0;
-    let fakeLoading = setInterval(() => {
-        progress += 6;
-        if (progress >= 90) progress = 90;
-        bar.style.width = progress + "%";
-        percentText.innerText = progress + "%";
-    }, 180);
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
 
-    // SEND REQUEST
-    const res = await fetch(`${API_BASE}/${tool}`, {
-        method: "POST",
-        body: fd
+        xhr.open("POST", `${API_BASE}/${tool}`);
+        xhr.responseType = "blob";
+
+        // Fast REAL upload progress
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                let p = Math.round((e.loaded / e.total) * 100);
+                bar.style.width = p + "%";
+                percent.innerText = p + "%";
+            }
+        };
+
+        xhr.onload = function () {
+            if (xhr.status !== 200) {
+                alert("Error: " + xhr.status);
+                return reject(xhr.status);
+            }
+
+            // Complete progress
+            bar.style.width = "100%";
+            percent.innerText = "100%";
+
+            let blob = xhr.response;
+            let url = URL.createObjectURL(blob);
+
+            const fileNames = {
+                "pdf-to-word": "output.docx",
+                "pdf-to-jpg": "output.jpg",
+                "jpg-to-pdf": "output.pdf",
+                "merge-pdf": "merged.pdf",
+                "split-pdf": "split.zip",
+                "rotate-pdf": "rotated.pdf",
+                "compress-pdf": "compressed.pdf",
+                "word-to-pdf": "output.pdf",
+                "ppt-to-pdf": "output.pdf",
+                "extract-text": "output.txt"
+            };
+
+            downloadBtn.href = url;
+            downloadBtn.download = fileNames[tool] || "output.pdf";
+            downloadBtn.style.display = "block";
+
+            resolve();
+        };
+
+        xhr.onerror = () => {
+            alert("Network error");
+            reject();
+        };
+
+        xhr.send(fd);
     });
-
-    if (!res.ok) {
-        clearInterval(fakeLoading);
-        bar.style.width = "0%";
-        percentText.innerText = "0%";
-        alert(`Error: ${res.status}`);
-        return;
-    }
-
-    // EXTRACT TEXT (special)
-    if (tool === "extract-text") {
-        const data = await res.json();
-        clearInterval(fakeLoading);
-        bar.style.width = "100%";
-        percentText.innerText = "100%";
-        alert(data.text);
-        return;
-    }
-
-    // DOWNLOAD FILE
-    const blob = await res.blob();
-    clearInterval(fakeLoading);
-    bar.style.width = "100%";
-    percentText.innerText = "100%";
-
-    const url = URL.createObjectURL(blob);
-
-    const fileNames = {
-        "pdf-to-word": "output.docx",
-        "pdf-to-jpg": "output.jpg",
-        "jpg-to-pdf": "output.pdf",
-        "merge-pdf": "merged.pdf",
-        "split-pdf": "split.zip",
-        "rotate-pdf": "rotated.pdf",
-        "compress-pdf": "compressed.pdf",
-        "word-to-pdf": "output.pdf",
-        "ppt-to-pdf": "output.pdf",
-        "extract-text": "output.txt"
-    };
-
-    const dn = document.getElementById("download-btn");
-    dn.href = url;
-    dn.download = fileNames[tool] || "output.pdf";
-    dn.innerText = "Download File";
-    dn.style.display = "block";
 }
