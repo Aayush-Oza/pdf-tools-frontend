@@ -1,77 +1,60 @@
 const API_BASE = "https://pdf-tools-backend-1.onrender.com";
 
 // -----------------------------------------------------
-// Load Tool Name
+// Open Tool Page
 // -----------------------------------------------------
 function openTool(tool) {
     window.location.href = `tool.html?tool=${tool}`;
 }
 
-const params = new URLSearchParams(window.location.search);
-const tool = params.get("tool");
-
-if (tool && document.getElementById("toolName")) {
-    document.getElementById("toolName").innerText =
-        tool.replace(/-/g, " ").toUpperCase();
-}
-
 // -----------------------------------------------------
-// Show selected file names (one per line)
+// Get Tool Name From URL
 // -----------------------------------------------------
-document.getElementById("fileInput").addEventListener("change", () => {
-    const fileInput = document.getElementById("fileInput");
-    const list = document.getElementById("fileList");
-
-    list.innerHTML = "";
-
-    if (fileInput.files.length === 0) {
-        list.innerHTML = "<p>No file selected.</p>";
-        return;
-    }
-
-    for (let file of fileInput.files) {
-        const item = document.createElement("p");
-        item.textContent = "• " + file.name;
-        item.style.margin = "4px 0";
-        list.appendChild(item);
-    }
-});
-
-
-// -----------------------------------------------------
-// Show/Hide Inputs Based on Tool
-// -----------------------------------------------------
-if (tool === "merge-pdf" || tool === "jpg-to-pdf") {
-    document.getElementById("fileInput").multiple = true;
-}
-
-if (tool === "protect-pdf" || tool === "unlock-pdf") {
-    document.getElementById("passwordInput").style.display = "block";
-}
-
-if (tool === "split-pdf") {
-    document.getElementById("rangeInput").style.display = "block";
-}
-
-if (tool === "rotate-pdf") {
-    document.getElementById("angleInput").style.display = "block";
-}
-
-/* -----------------------------------------------------
-   BETTER FILE LIST UI (matching your CSS)
------------------------------------------------------ */
-
 document.addEventListener("DOMContentLoaded", () => {
-    const fileInput = document.getElementById("fileInput");
 
+    const params = new URLSearchParams(window.location.search);
+    const tool = params.get("tool");
+
+    // Set tool title
+    if (tool && document.getElementById("toolName")) {
+        document.getElementById("toolName").innerText =
+            tool.replace(/-/g, " ").toUpperCase();
+    }
+
+    // File input exists only on tool.html
+    const fileInput = document.getElementById("fileInput");
     if (fileInput) {
+
+        // Show file list on change
         fileInput.addEventListener("change", updateFileList);
+
+        // Configure special inputs based on tool
+        if (tool === "merge-pdf" || tool === "jpg-to-pdf") {
+            fileInput.multiple = true;
+        }
+
+        if (tool === "protect-pdf" || tool === "unlock-pdf") {
+            document.getElementById("passwordInput").style.display = "block";
+        }
+
+        if (tool === "split-pdf") {
+            document.getElementById("rangeInput").style.display = "block";
+        }
+
+        if (tool === "rotate-pdf") {
+            document.getElementById("angleInput").style.display = "block";
+        }
     }
 });
 
+// -----------------------------------------------------
+// File List UI
+// -----------------------------------------------------
 function updateFileList() {
     const input = document.getElementById("fileInput");
     const list = document.getElementById("fileList");
+
+    if (!input || !list) return;
 
     list.innerHTML = "";
 
@@ -103,28 +86,27 @@ function updateFileList() {
 
 function removeFile(index) {
     const input = document.getElementById("fileInput");
+    if (!input) return;
 
-    // Create editable file list
     const dt = new DataTransfer();
     let files = [...input.files];
 
-    // Remove selected file
     files.splice(index, 1);
 
-    // Add back remaining files
     files.forEach(f => dt.items.add(f));
-
-    // Assign updated list back to input
     input.files = dt.files;
 
-    // Refresh UI
     updateFileList();
 }
 
 // -----------------------------------------------------
-// Process File (with progress % + smooth loader)
+// Process File — with Progress Loader
 // -----------------------------------------------------
 async function processFile() {
+
+    const params = new URLSearchParams(window.location.search);
+    const tool = params.get("tool");
+
     let fd = new FormData();
 
     // MULTIPLE FILE TOOLS
@@ -138,21 +120,21 @@ async function processFile() {
         for (let f of files) fd.append("files", f);
     }
 
-    // SINGLE FILE
+    // SINGLE FILE TOOLS
     else {
         const file = document.getElementById("fileInput").files[0];
         if (!file) return alert("Select a file");
         fd.append("file", file);
     }
 
-    // SPLIT
+    // SPLIT TOOL
     if (tool === "split-pdf") {
         const ranges = document.getElementById("rangeInput").value;
         if (!ranges) return alert("Enter page ranges");
         fd.append("ranges", ranges);
     }
 
-    // ROTATE
+    // ROTATE TOOL
     if (tool === "rotate-pdf") {
         const angle = document.getElementById("angleInput").value;
         fd.append("angle", angle);
@@ -165,32 +147,25 @@ async function processFile() {
         fd.append("password", pwd);
     }
 
-    // ----------------------------
-    // Show progress bar
-    // ----------------------------
+    // PROGRESS BAR UI
     const wrapper = document.getElementById("progress-wrapper");
     const bar = document.getElementById("progress-bar");
     const percentText = document.getElementById("progress-percent");
 
     wrapper.style.display = "block";
     document.getElementById("download-btn").style.display = "none";
-
     bar.style.width = "0%";
     percentText.innerText = "0%";
 
-    // Fake progress animation
     let progress = 0;
     let fakeLoading = setInterval(() => {
         progress += 6;
         if (progress >= 90) progress = 90;
-
         bar.style.width = progress + "%";
         percentText.innerText = progress + "%";
     }, 180);
 
-    // ----------------------------
-    // Send request to backend
-    // ----------------------------
+    // SEND REQUEST
     const res = await fetch(`${API_BASE}/${tool}`, {
         method: "POST",
         body: fd
@@ -204,22 +179,19 @@ async function processFile() {
         return;
     }
 
-    // EXTRACT TEXT
+    // EXTRACT TEXT (special)
     if (tool === "extract-text") {
         const data = await res.json();
         clearInterval(fakeLoading);
         bar.style.width = "100%";
         percentText.innerText = "100%";
-        alert("Extracted Text:\n\n" + data.text);
+        alert(data.text);
         return;
     }
 
-    // ----------------------------
-    // Download output
-    // ----------------------------
+    // DOWNLOAD FILE
     const blob = await res.blob();
     clearInterval(fakeLoading);
-
     bar.style.width = "100%";
     percentText.innerText = "100%";
 
@@ -244,5 +216,3 @@ async function processFile() {
     dn.innerText = "Download File";
     dn.style.display = "block";
 }
-
-

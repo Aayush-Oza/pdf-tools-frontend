@@ -15,7 +15,7 @@
   --accent-1: #000000;       /* Black */
   --accent-2: #2e2e2e;       /* Dark gray (replacing green) */
 
-  --gradient: linear-gradient(135deg, #000000, #3a3a3a, #d9d9d9);
+  --gradient: linear-gradient(135deg, #000000, #3a3a3a);
 
   --shadow: 0 10px 30px rgba(0,0,0,0.12);
   --soft-shadow: 0 6px 20px rgba(0,0,0,0.10);
@@ -48,8 +48,8 @@ body {
   color: #fff;
   padding: 70px 20px;
   text-align: center;
-  border-bottom-left-radius: 50px;
-  border-bottom-right-radius: 50px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   box-shadow: var(--shadow);
 }
 
@@ -64,6 +64,7 @@ body {
   margin-top: 6px;
   font-size: 1.2rem;
   font-weight: 500;
+  color: #d9d9d9;
 }
 
 /* Mobile hero fix */
@@ -113,12 +114,13 @@ body {
   cursor: pointer;
   border: 2px solid transparent;
 
-  /* --- SAME SIZE FIX --- */
-  height: 165px;
+  /* AUTO HEIGHT – content fits naturally */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
 }
+
 
 .tool-card:hover {
   transform: translateY(-6px);
@@ -375,4 +377,18 @@ select {
 
 .remove-btn:hover {
   color: red;
+}
+/* ------- MOBILE HERO HEIGHT FIX ------- */
+@media (max-width: 480px) {
+  .hero {
+    padding: 35px 20px;   /* Reduced height */
+  }
+
+  .hero-title {
+    font-size: 2rem;      /* Smaller title */
+  }
+
+  .hero-sub {
+    font-size: 0.9rem;    /* Smaller subtitle */
+  }
 }
