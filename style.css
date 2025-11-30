@@ -392,3 +392,30 @@ select {
     font-size: 0.9rem;    /* Smaller subtitle */
   }
 }
+/* ------- MOBILE TOOL CARD OPTIMIZATION ------- */
+@media (max-width: 480px) {
+  
+  /* Make tool cards slightly smaller */
+  .tool-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  /* Smaller icons */
+  .tool-icon {
+    font-size: 32px;      /* was 45px */
+    margin-bottom: 8px;
+  }
+
+  /* Smaller tool title */
+  .tool-title {
+    font-size: 0.95rem;   /* was 1.15rem */
+    font-weight: 700;
+  }
+
+  /* Reduce grid gap */
+  .tools-grid {
+    gap: 14px;
+  }
+}
+
