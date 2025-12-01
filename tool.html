@@ -18,7 +18,8 @@
 
     <!-- File Upload (Custom UI) -->
 <label class="upload-label">
-  <input type="file" id="fileInput" class="hidden-input">
+  <input type="file" id="fileInput" class="hidden-input" multiple>
+
   <span class="upload-text">🐼 Choose Files</span>
 </label>
 
@@ -59,7 +60,8 @@
 "></p>
 
     <!-- Download Button -->
-    <a id="download-btn" href="#" download></a>
+    <a id="download-btn" href="#" download style="display:none;">Download</a>
+
 
     <!-- Extracted Text Output -->
     <textarea id="textOutput" 
