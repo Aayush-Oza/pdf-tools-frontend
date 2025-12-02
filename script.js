@@ -244,21 +244,19 @@ function renderGallery(container) {
 }
 
 
-/* Enable Drag + Drop + Touch Reorder (Desktop + Mobile) */
 function enableDrag(container) {
   let dragIndex = null;
 
   container.querySelectorAll(".img-item").forEach(item => {
 
-    /* ---------------------- DESKTOP DRAG EVENTS ---------------------- */
+    /* ---------------- DESKTOP DRAG ---------------- */
     item.addEventListener("dragstart", e => {
-      dragIndex = parseInt(e.currentTarget.dataset.index, 10);
+      dragIndex = parseInt(item.dataset.index, 10);
       e.dataTransfer.effectAllowed = "move";
     });
 
     item.addEventListener("dragover", e => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
       item.style.opacity = "0.6";
     });
 
@@ -270,53 +268,52 @@ function enableDrag(container) {
       e.preventDefault();
       item.style.opacity = "1";
 
-      const dropIndex = parseInt(e.currentTarget.dataset.index, 10);
+      const dropIndex = parseInt(item.dataset.index, 10);
       if (isNaN(dragIndex) || isNaN(dropIndex)) return;
 
-      // swap
-      const temp = galleryOrder[dragIndex];
-      galleryOrder[dragIndex] = galleryOrder[dropIndex];
-      galleryOrder[dropIndex] = temp;
-
-      renderGallery(container);
-      applyReorderToInput();
+      swapImages(dragIndex, dropIndex, container);
     });
 
-    /* ---------------------- MOBILE TOUCH EVENTS ---------------------- */
+    /* ---------------- MOBILE TOUCH ---------------- */
     item.addEventListener("touchstart", e => {
-      dragIndex = parseInt(e.currentTarget.dataset.index, 10);
+      dragIndex = parseInt(item.dataset.index, 10);
     });
-    item.addEventListener("touchmove", e => {
-    e.preventDefault();
-}, { passive: false });
 
+    item.addEventListener("touchmove", e => {
+      e.preventDefault(); // stops scrolling during drag
+    }, { passive: false });
 
     item.addEventListener("touchend", e => {
-      const touch = e.changedTouches[0];
+      const t = e.changedTouches[0];
 
-      const dropTarget = document.elementFromPoint(
-        touch.clientX,
-        touch.clientY
-      );
+      let dropTarget = document.elementFromPoint(t.clientX, t.clientY);
       if (!dropTarget) return;
 
-      const dropItem = dropTarget.closest(".img-item");
+      // FIX: if touch lands on IMG, find parent .img-item
+      const dropItem =
+        dropTarget.closest(".img-item") ||
+        (dropTarget.parentElement && dropTarget.parentElement.closest(".img-item"));
+
       if (!dropItem) return;
 
       const dropIndex = parseInt(dropItem.dataset.index, 10);
-      if (isNaN(dragIndex) || isNaN(dropIndex) || dragIndex === dropIndex) return;
+      if (isNaN(dropIndex) || dragIndex === dropIndex) return;
 
-      // swap
-      const temp = galleryOrder[dragIndex];
-      galleryOrder[dragIndex] = galleryOrder[dropIndex];
-      galleryOrder[dropIndex] = temp;
-
-      renderGallery(container);
-      applyReorderToInput();
+      swapImages(dragIndex, dropIndex, container);
     });
-
   });
 }
+
+/* Clean helper */
+function swapImages(a, b, container) {
+  const temp = galleryOrder[a];
+  galleryOrder[a] = galleryOrder[b];
+  galleryOrder[b] = temp;
+
+  renderGallery(container);
+  applyReorderToInput();
+}
+
 
 /* Apply reordered images to the real input */
 function applyReorderToInput() {
