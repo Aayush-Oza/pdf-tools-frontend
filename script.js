@@ -149,21 +149,35 @@ function openViewer() {
   const first = originalFiles[0];
 
   // PDF preview
-  if (first.type === "application/pdf") {
-    if (frame) {
-      frame.style.display = "block";
-      try {
-        frame.src = URL.createObjectURL(first);
-      } catch (err) {
-        console.error("PDF preview error:", err);
-        if (infoBox) {
-          infoBox.style.display = "block";
-          infoBox.innerHTML = `<p>Could not preview PDF. Selected: <strong>${first.name}</strong></p>`;
-        }
-      }
-    }
+if (first.type === "application/pdf") {
+  const blobURL = URL.createObjectURL(first);
+
+  // detect mobile (Android / iPhone / iPad)
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Mobile → always open in new tab (safe)
+    window.open(blobURL, "_blank");
     return;
   }
+
+  // Desktop → show in iframe popup (your existing behavior)
+  if (frame) {
+    frame.style.display = "block";
+    try {
+      frame.src = blobURL;
+    } catch (err) {
+      console.error("PDF preview error:", err);
+      if (infoBox) {
+        infoBox.style.display = "block";
+        infoBox.innerHTML = `<p>Could not preview PDF. Selected: <strong>${first.name}</strong></p>`;
+      }
+    }
+  }
+
+  return;
+}
+
 
   // MULTIPLE IMAGES -> draggable gallery
   const allImages = originalFiles.every(f => f.type.startsWith("image/"));
@@ -227,30 +241,28 @@ function renderGallery(container) {
 }
 
 
-/* Enable Drag + Drop (updates input after drop) */
+/* Enable Drag + Drop + Touch Reorder (Desktop + Mobile) */
 function enableDrag(container) {
   let dragIndex = null;
 
-  // Attach handlers to current items
   container.querySelectorAll(".img-item").forEach(item => {
-    // dragstart -> store index
+
+    /* ---------------------- DESKTOP DRAG EVENTS ---------------------- */
     item.addEventListener("dragstart", e => {
       dragIndex = parseInt(e.currentTarget.dataset.index, 10);
       e.dataTransfer.effectAllowed = "move";
     });
 
-    // allow drop
     item.addEventListener("dragover", e => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       item.style.opacity = "0.6";
     });
 
-    item.addEventListener("dragleave", e => {
+    item.addEventListener("dragleave", () => {
       item.style.opacity = "1";
     });
 
-    // drop -> swap & re-render & update file input immediately
     item.addEventListener("drop", e => {
       e.preventDefault();
       item.style.opacity = "1";
@@ -263,12 +275,39 @@ function enableDrag(container) {
       galleryOrder[dragIndex] = galleryOrder[dropIndex];
       galleryOrder[dropIndex] = temp;
 
-      // re-render gallery
       renderGallery(container);
-
-      // APPLY NEW ORDER TO REAL FILE INPUT immediately
       applyReorderToInput();
     });
+
+    /* ---------------------- MOBILE TOUCH EVENTS ---------------------- */
+    item.addEventListener("touchstart", e => {
+      dragIndex = parseInt(e.currentTarget.dataset.index, 10);
+    });
+
+    item.addEventListener("touchend", e => {
+      const touch = e.changedTouches[0];
+
+      const dropTarget = document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
+      );
+      if (!dropTarget) return;
+
+      const dropItem = dropTarget.closest(".img-item");
+      if (!dropItem) return;
+
+      const dropIndex = parseInt(dropItem.dataset.index, 10);
+      if (isNaN(dragIndex) || isNaN(dropIndex) || dragIndex === dropIndex) return;
+
+      // swap
+      const temp = galleryOrder[dragIndex];
+      galleryOrder[dragIndex] = galleryOrder[dropIndex];
+      galleryOrder[dropIndex] = temp;
+
+      renderGallery(container);
+      applyReorderToInput();
+    });
+
   });
 }
 
