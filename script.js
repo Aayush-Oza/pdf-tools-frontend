@@ -183,7 +183,10 @@ if (first.type === "application/pdf") {
   const allImages = originalFiles.every(f => f.type.startsWith("image/"));
   if (originalFiles.length > 1 && allImages) {
     if (!gallery) return;
-    gallery.style.display = "grid";
+    gallery.style.display = "flex";
+gallery.style.flexDirection = "column";
+gallery.style.alignItems = "center";
+
     galleryOrder = [...originalFiles];
     renderGallery(gallery);
     return;
@@ -283,6 +286,10 @@ function enableDrag(container) {
     item.addEventListener("touchstart", e => {
       dragIndex = parseInt(e.currentTarget.dataset.index, 10);
     });
+    item.addEventListener("touchmove", e => {
+    e.preventDefault();
+}, { passive: false });
+
 
     item.addEventListener("touchend", e => {
       const touch = e.changedTouches[0];

@@ -522,26 +522,43 @@ select {
    IMAGE GALLERY (REORDER)
 ============================= */
 
+/* Clean centered reorder gallery */
 #img-gallery {
-  width: 100%;
-  padding: 20px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 20px;
 }
 
+/* Desktop image card */
 .img-item {
-  margin-bottom: 20px;
-  border-radius: 14px;
-  overflow: hidden;
+    width: 60%;
+    max-width: 420px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.15);
 
-  cursor: grab;       /* TOUCH REORDER SUPPORT */
-  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    cursor: grab;
 }
 
 .img-item:active {
-  cursor: grabbing;
+    cursor: grabbing;
 }
 
 .img-item img {
-  width: 100%;
-  display: block;
-  border-radius: 14px;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
 }
+
+/* MOBILE */
+@media (max-width: 600px) {
+    .img-item {
+        width: 90%;
+        max-width: 350px;
+    }
+}
+
