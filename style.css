@@ -479,21 +479,24 @@ select {
   justify-content: center;
   align-items: center;
   z-index: 9999;
+
+  overflow-y: auto;        /* <-- ONLY popup scrolls */
 }
+
 
 /* FULL WIDTH CLEAN POPUP */
 .popup-inner {
     background: #fff;
-    width: 95%;             /* wide */
-    max-width: 1000px;      /* for desktop */
-    height: 90%;
-    margin: auto;
+    width: 95%;
+    max-width: 1000px;
+    height: auto;           /* <-- Remove forced height */
+    margin: 50px auto;
 
-    padding: 10px 0;        /* remove left-right padding */
+    padding: 10px 0;
     border-radius: 14px;
     position: relative;
 
-    overflow-y: auto;
+    overflow: visible;      /* <-- IMPORTANT: remove internal scroll */
     box-shadow: 0 25px 50px rgba(0,0,0,0.3);
 }
 
@@ -537,39 +540,36 @@ select {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 25px;
-    padding: 0;             /* remove all extra spacing */
-}
-
-/* IMAGE CARD SHOULD COVER WIDTH */
-/* IMAGE CARD - FULL WIDTH */
-.img-item {
-    width: 98%;          /* almost full width */
-    max-width: 1100px;   /* big on desktop */
-    margin: 0 auto;
-    background: none;
+    width: 100%;         /* full width */
     padding: 0;
-    box-shadow: none;
+    margin: 0;
+    gap: 20px;
 }
 
-/* IMAGE FULL WIDTH */
+.img-item {
+    width: 100%;         /* FULL width */
+    margin: 0;
+    padding: 0;
+}
+
 .img-item img {
-    width: 100%;
+    width: 100%;         /* STRICT full width */
     height: auto;
     display: block;
+    border-radius: 10px;
     object-fit: contain;
-    border-radius: 8px;
 }
+
 
 
 /* MOBILE FIX */
 @media (max-width: 600px) {
     .popup-inner {
-        width: 98%;
-        padding: 5px 0;
+        width: 100%;
+        margin: 20px auto;
     }
 
     .img-item {
-        max-width: 100%;
+        width: 100%;
     }
 }
