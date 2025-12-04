@@ -475,30 +475,28 @@ select {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.65);
-  justify-content: center;
-  align-items: center;
+  background: rgba(0,0,0,0.75);
+  overflow-y: auto;    /* FULL popup scroll */
+  padding: 30px 0;     /* space for closed top */
   z-index: 9999;
-
-  overflow-y: auto;        /* <-- ONLY popup scrolls */
 }
+
 
 
 /* FULL WIDTH CLEAN POPUP */
 .popup-inner {
-    background: #fff;
-    width: 95%;
-    max-width: 1000px;
-    height: auto;           /* <-- Remove forced height */
-    margin: 50px auto;
+  background: #fff;
+  width: 100%;
+  max-width: 850px;   /* perfect size, no huge side gaps */
+  margin: auto;
+  padding: 0;
+  border-radius: 14px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 
-    padding: 10px 0;
-    border-radius: 14px;
-    position: relative;
-
-    overflow: visible;      /* <-- IMPORTANT: remove internal scroll */
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+  overflow: visible !important;   /* <-- VERY IMPORTANT FIX */
 }
+
 
 /* Mobile keep full width */
 @media (max-width: 700px) {
@@ -516,17 +514,20 @@ select {
 
 /* Viewer close */
 #close-viewer {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  position: sticky;     /* stays visible while scrolling */
+  top: 10px;
+  float: right;
+
   background: #000;
   color: #fff;
   border: none;
   font-size: 22px;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
+  z-index: 10000;
 }
+
 
 /* INFO BOX (missing earlier) */
 #viewer-info {
@@ -537,39 +538,42 @@ select {
 
 /* GALLERY CLEAN, NO LEFT/RIGHT SPACE */
 #img-gallery {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;         /* full width */
-    padding: 0;
-    margin: 0;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
 }
+
 
 .img-item {
-    width: 100%;         /* FULL width */
-    margin: 0;
-    padding: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
 }
-
 .img-item img {
-    width: 100%;         /* STRICT full width */
-    height: auto;
-    display: block;
-    border-radius: 10px;
-    object-fit: contain;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain; /* no cropping */
+  border-radius: 10px;
 }
-
-
 
 /* MOBILE FIX */
 @media (max-width: 600px) {
-    .popup-inner {
-        width: 100%;
-        margin: 20px auto;
-    }
+  #pdf-viewer-popup {
+     padding: 10px 0;
+  }
 
-    .img-item {
-        width: 100%;
-    }
+  .popup-inner {
+     width: 100%;
+     margin: 0;
+     border-radius: 0;
+  }
+
+  #img-gallery {
+     gap: 15px;
+  }
 }
+
