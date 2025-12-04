@@ -468,117 +468,160 @@ select {
    VIEWER POPUP OVERLAY
 ============================= */
 
+/* ====== Viewer popup + Reorder Mode CSS ====== */
+
 #pdf-viewer-popup {
   display: none;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.75);
-  overflow-y: auto;     /* Only outer popup scrolls */
-  padding: 20px 0;
   z-index: 9999;
+  overflow-y: auto;      /* popup scrolls, not inner content */
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 12px;
 }
 
-
-/* =============================
-   POPUP INNER BOX (NO SCROLL INSIDE)
-============================= */
-
+/* popup inner */
 .popup-inner {
+  width: 100%;
+  max-width: 920px;
+  margin: 18px auto;
   background: #fff;
-  width: 100%;
-  max-width: 900px;      /* Looks perfect on large screens */
-  margin: auto;
-  padding: 0;
-
   border-radius: 12px;
-  position: relative;
-
-  overflow: visible !important;   /* Fix image cutting */
+  overflow: visible !important;
   box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+  position: relative;
+  padding-bottom: 18px;
 }
 
-
-/* MOBILE FIX — No extra margins */
-@media (max-width: 700px) {
-  .popup-inner {
-    width: 100%;
-    margin: 0;
-    border-radius: 0;    /* Full width clean popup */
-  }
-}
-
-
-/* =============================
-   CLOSE BUTTON — Always visible
-============================= */
-
-#close-viewer {
-  position: sticky;
-  top: 10px;
-  float: right;
-
-  background: #000;
-  color: #fff;
-  border: none;
-  font-size: 24px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  z-index: 20000;
-}
-
-
-/* =============================
-   IMAGE GALLERY WRAPPER
-============================= */
-
-#img-gallery {
+/* top controls row */
+.viewer-controls {
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 22px;
-
-  padding: 0;
-  margin: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
+/* close button */
+#close-viewer {
+  background:#000;
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:18px;
+  cursor:pointer;
+}
 
-/* EACH IMAGE ROW */
+/* actions area (reorder toggle + status) */
+.viewer-actions {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#reorder-toggle {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:8px;
+  background:#f1f1f1;
+  border:1px solid #ddd;
+  cursor:pointer;
+  font-weight:700;
+}
+
+#reorder-toggle[aria-pressed="true"] {
+  background:#ffeeba;
+  border-color:#ffc107;
+  color:#222;
+}
+
+.reorder-status {
+  font-size:13px;
+  color:#444;
+  font-weight:600;
+  display:inline-block;
+}
+
+/* PDF iframe full area */
+#pdf-frame {
+  width:100%;
+  height:calc(100vh - 160px); /* reasonable height */
+  border:none;
+  display:block;
+}
+
+/* Gallery (stacked images) */
+#img-gallery {
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  padding: 12px 12px 0 12px;
+  width:100%;
+}
+
+/* each image row acts like a draggable card */
 .img-item {
-  width: 100%;
-  padding: 0;
-  margin: 0;
+  width:100%;
+  margin:0;
+  padding:0;
+  cursor:grab;
+  display:block;
+  border-radius:8px;
+  overflow:hidden;
+  background:transparent;
+  -webkit-user-select:none;
+  user-select:none;
 }
 
+/* dragging visual */
+.img-item.dragging {
+  opacity:0.6;
+  transform: scale(0.995);
+  outline: 3px dashed rgba(0,0,0,0.06);
+}
 
-/* IMAGES — Full width, no cropping */
+/* img full width */
 .img-item img {
-  width: 100%;
-  height: auto;
-  display: block;
-
-  border-radius: 10px;
-  object-fit: contain;
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  border-radius:6px;
 }
 
+/* small hint shown at bottom when reorder is enabled */
+.popup-inner .reorder-hint-inline {
+  display:block;
+  text-align:center;
+  padding:8px;
+  font-size:13px;
+  color:#555;
+}
 
-/* MOBILE SMALL FIXES */
-@media (max-width: 600px) {
-  #pdf-viewer-popup {
-    padding: 10px 0;
+/* Responsive: full width on small screens */
+@media (max-width:700px) {
+  .popup-inner {
+    max-width:100%;
+    margin: 0;
+    border-radius: 0;
   }
 
-  #img-gallery {
-    gap: 15px;   /* tighter space */
-  }
+  #pdf-frame { height: calc(100vh - 120px); }
+
+  #reorder-toggle { padding:7px 10px; font-size:14px; }
 }
 
-
-/* =============================
-   INFO BOX FOR NON-IMAGE PREVIEW
-============================= */
-#viewer-info {
-  padding: 20px;
-  font-size: 14px;
-  color: #444;
+/* When reorder mode is ON add a subtle border to img rows (visual affordance) */
+.popup-inner.reorder-mode .img-item {
+  border-radius:8px;
+  padding:6px;
+  background: rgba(255,235,205,0.6);
 }
+
+/* hide scrollbar on some platforms if desired (optional) */
+#img-gallery::-webkit-scrollbar { height:8px; width:8px; }
