@@ -721,3 +721,11 @@ select {
 .pdf-view-btn:hover {
     background: #000;
 }
+body {
+    opacity: 0;
+    transition: 0.25s ease;
+}
+
+body.ready {
+    opacity: 1;
+}

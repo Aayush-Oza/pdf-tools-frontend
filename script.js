@@ -4,6 +4,9 @@
    - Merge PDF : draggable PDF list + reorder
    - Fixed pdf-to-word download name
 ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    document.body.classList.add("ready");
+});
 
 const API_BASE = "https://pdf-tools-backend-1.onrender.com";
 
@@ -184,7 +187,7 @@ renderGallery(gallery);
   -------------------------------------------------------- */
   if (isPDF) {
     const url = URL.createObjectURL(first);
-    window.open(url, "_blank");
+    setTimeout(() => window.open(url, "_blank"), 10);
     return;
   }
 
@@ -248,51 +251,79 @@ function renderGallery(container) {
   const tool = params.get("tool");
 
   if (!container) return;
+
   container.innerHTML = "";
 
-  galleryOrder.forEach((file, i) => {
-    const div = document.createElement("div");
-    div.dataset.index = i;
-    div.draggable = reorderMode;
+  const fragment = document.createDocumentFragment();
+  const total = galleryOrder.length;
+  let i = 0;
 
-    if (tool === "merge-pdf") {
-      // Simple PDF row (best for desktop + mobile)
-      div.className = "pdf-item";
+  function renderChunk() {
+    const CHUNK_SIZE = 20; // render 20 items per frame (fast + smooth)
 
-      const sizeKB = Math.round(file.size / 1024);
+    const end = Math.min(i + CHUNK_SIZE, total);
 
-      div.innerHTML = `
-    <span class="pdf-icon">📄</span>
+    for (; i < end; i++) {
+      const file = galleryOrder[i];
+      const div = document.createElement("div");
+      div.dataset.index = i;
+      div.draggable = reorderMode;
 
-    <div class="pdf-info">
-        <span class="pdf-name">${file.name}</span>
-        <span class="pdf-meta">${sizeKB} KB</span>
-    </div>
+      if (tool === "merge-pdf") {
+        /* ---------------- PDF MERGE LIST ---------------- */
+        div.className = "pdf-item";
 
-    <button class="pdf-view-btn">View</button>
-`;
+        const sizeKB = Math.round(file.size / 1024);
 
+        div.innerHTML = `
+          <span class="pdf-icon">📄</span>
+          <div class="pdf-info">
+              <span class="pdf-name">${file.name}</span>
+              <span class="pdf-meta">${sizeKB} KB</span>
+          </div>
+          <button class="pdf-view-btn">View</button>
+        `;
 
-      const viewBtn = div.querySelector(".pdf-view-btn");
-      if (viewBtn) {
-        viewBtn.addEventListener("click", () => {
-          const url = URL.createObjectURL(file);
-          window.open(url, "_blank");
-        });
+        const viewBtn = div.querySelector(".pdf-view-btn");
+        if (viewBtn) {
+          viewBtn.addEventListener("click", () => {
+            const url = file._url || (file._url = URL.createObjectURL(file));
+            setTimeout(() => window.open(url, "_blank"), 10);
+          });
+        }
+
+      } else {
+        /* ---------------- IMAGE PREVIEW (JPG→PDF) ---------------- */
+        div.className = "img-item";
+
+        const img = document.createElement("img");
+
+        img.loading = "lazy";        // 👈 Lazy load for speed
+        img.decoding = "async";      // 👈 async decode for smoothness
+
+        if (!file._url) file._url = URL.createObjectURL(file);
+        img.src = file._url;
+
+        div.appendChild(img);
       }
-    } else {
-      // JPG→PDF: show actual image
-      div.className = "img-item";
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      div.appendChild(img);
+
+      fragment.appendChild(div);
     }
 
-    container.appendChild(div);
-  });
+    // Append fragment to DOM
+    container.appendChild(fragment);
 
-  if (reorderMode) enableDrag(container);
+    // Render next batch
+    if (i < total) {
+      requestAnimationFrame(renderChunk);
+    } else if (reorderMode) {
+      enableDrag(container);
+    }
+  }
+
+  requestAnimationFrame(renderChunk);
 }
+
 
 /* ============================================================
    DRAG / TOUCH REORDER
@@ -387,6 +418,22 @@ if (closeViewerBtn) {
    - Uses correct file names for each tool
    - 100% progress when ready to download
 ============================================================ */
+async function uploadFileFast(url, file) {
+    const CHUNK = 512 * 1024; // 512 KB chunk
+    let start = 0;
+
+    const fdBase = new FormData();
+
+    while (start < file.size) {
+        const chunk = file.slice(start, start + CHUNK);
+        const fd = new FormData();
+        fd.append("file", chunk, file.name);
+
+        await fetch(url, { method: "POST", body: fd });
+        start += CHUNK;
+    }
+}
+
 async function processFile() {
   // Apply reorder for JPG→PDF and MERGE PDF (safe)
   applyReorderToInput();
@@ -480,7 +527,7 @@ if (tool === "extract-text") {
 
       const names = {
         "pdf-to-word": "output.docx",
-        "pdf-to-jpg": "output.jpg",
+        "pdf-to-jpg": "images.zip",
         "jpg-to-pdf": "output.pdf",
         "merge-pdf": "merged.pdf",
         "split-pdf": "split.zip",
