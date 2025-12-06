@@ -625,3 +625,28 @@ select {
 
 /* hide scrollbar on some platforms if desired (optional) */
 #img-gallery::-webkit-scrollbar { height:8px; width:8px; }
+/* MOBILE FIX FOR POPUP VIEWER */
+@media (max-width: 700px) {
+
+  #pdf-viewer-popup {
+    padding: 0 !important;
+    align-items: flex-start;
+  }
+
+  .popup-inner {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+
+  #pdf-frame {
+    height: calc(100vh - 80px) !important;
+  }
+
+  #img-gallery img {
+    max-height: 250px !important;
+  }
+}
